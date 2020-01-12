@@ -544,13 +544,30 @@ kill(int pid)
 // No lock to avoid wedging a stuck machine further.
 
 #if defined(CS333_P4)
-// TODO for Project 4, define procdumpP4() here
+void
+procdumpP4(struct proc *p, char *state_string)
+{
+  cprintf("TODO for Project 4, deleete this line and implement procdrumpP4() in proc.c to print a row\n");
+  return;
+}
 #elif defined(CS333_P3)
-// TODO for Project 3, define procdumpP3() here
+void
+procdumpP3(struct proc *p, char *state_string)
+{
+  cprintf("TODO for Project 3, delete this line and implement procdumpP3() in proc.c to print a row\n");
+  return;
+}
 #elif defined(CS333_P2)
-// TODO for Project 2, define procdumpP2() here
+void
+procdumpP2(struct proc *p, char *state_string)
+{
+  cprintf("TODO for Project 2, delete this line and implement procdumpP2() in proc.c to print a row\n");
+  return;
+}
 #elif defined(CS333_P1)
 // TODO for Project 1, define procdumpP1() here
+cprintf("TODO for Project 1, delete this line and implement procdumpP1() in proc.c to print a row\n");
+return;
 #endif
 
 void
