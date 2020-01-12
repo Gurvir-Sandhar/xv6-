@@ -565,9 +565,12 @@ procdumpP2(struct proc *p, char *state_string)
   return;
 }
 #elif defined(CS333_P1)
-// TODO for Project 1, define procdumpP1() here
-cprintf("TODO for Project 1, delete this line and implement procdumpP1() in proc.c to print a row\n");
-return;
+void
+procdumpP1(struct proc *p, char *state_string)
+{
+  cprintf("TODO for Project 1, delete this line and implement procdumpP1() in proc.c to print a row\n");
+  return;
+}
 #endif
 
 void
