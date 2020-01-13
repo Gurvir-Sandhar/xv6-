@@ -139,6 +139,9 @@ allocproc(void)
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
+#ifdef CS333_P1
+  p->start_ticks = ticks;
+#endif
 
   return p;
 }
@@ -568,7 +571,14 @@ procdumpP2(struct proc *p, char *state_string)
 void
 procdumpP1(struct proc *p, char *state_string)
 {
-  cprintf("TODO for Project 1, delete this line and implement procdumpP1() in proc.c to print a row\n");
+  uint elapsed = ticks - p->start_ticks;//total elapsed ticks
+  uint seconds = elapsed/1000;//number of seconds
+  uint tenths = (elapsed %= 1000) /100;//tenths of a second
+  uint hundredths = (elapsed %= 100) /10;//hundredths of a second
+  uint thousandths = (elapsed %=10);//thousandths of a second
+  
+  cprintf("%d\t%s\t     %d.%d%d%d\t%s\t%d\t",
+            p->pid, p->name, seconds,tenths, hundredths, thousandths, state_string, p->sz);
   return;
 }
 #endif
