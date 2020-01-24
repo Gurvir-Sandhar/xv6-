@@ -51,7 +51,13 @@ struct proc {
   char name[16];               // Process name (debugging)
 #ifdef CS333_P1
   uint start_ticks;
-#endif
+#endif  //CS333_P1
+#ifdef CS333_P2
+  uint uid;                   //User ID of current process
+  uint gid;                   //Group ID of current process
+  uint cpu_ticks_total;       //Total elapsed ticks in CPU
+  uint cpu_ticks_in;          //ticks when scheduled
+#endif  //CS333_P2
 };
 
 // Process memory is laid out contiguously, low addresses first:

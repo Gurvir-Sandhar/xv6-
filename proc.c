@@ -7,6 +7,10 @@
 #include "proc.h"
 #include "spinlock.h"
 
+#ifdef CS333_P2
+#include "uproc.h"
+#endif  //CS333_P2
+
 static char *states[] = {
 [UNUSED]    "unused",
 [EMBRYO]    "embryo",
@@ -141,7 +145,11 @@ allocproc(void)
   p->context->eip = (uint)forkret;
 #ifdef CS333_P1
   p->start_ticks = ticks;
-#endif
+#endif //CS333_P1
+#ifdef CS333_P2
+  p->cpu_ticks_total = 0;
+  p->cpu_ticks_in =0;
+#endif  //CS333_P2
 
   return p;
 }
@@ -169,6 +177,11 @@ userinit(void)
   p->tf->eflags = FL_IF;
   p->tf->esp = PGSIZE;
   p->tf->eip = 0;  // beginning of initcode.S
+
+#ifdef CS333_P2
+  p->uid = UID;
+  p->gid = GID;
+#endif  //CS333_P2
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
@@ -229,6 +242,11 @@ fork(void)
   np->sz = curproc->sz;
   np->parent = curproc;
   *np->tf = *curproc->tf;
+
+#ifdef CS333_P2
+  np->uid = curproc->uid;
+  np->gid = curproc->gid;
+#endif  //CS333_P2
 
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
@@ -383,6 +401,11 @@ scheduler(void)
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
+
+#ifdef CS333_P2
+      p->cpu_ticks_in = ticks;
+#endif  //CS333_P2
+
       swtch(&(c->scheduler), p->context);
       switchkvm();
 
@@ -423,6 +446,9 @@ sched(void)
   if(readeflags()&FL_IF)
     panic("sched interruptible");
   intena = mycpu()->intena;
+#ifdef CS333_P2
+  p->cpu_ticks_total += (ticks - p->cpu_ticks_in);
+#endif  //CS333_P2
   swtch(&p->context, mycpu()->scheduler);
   mycpu()->intena = intena;
 }
@@ -564,7 +590,28 @@ procdumpP3(struct proc *p, char *state_string)
 void
 procdumpP2(struct proc *p, char *state_string)
 {
-  cprintf("TODO for Project 2, delete this line and implement procdumpP2() in proc.c to print a row\n");
+  //elapsed time
+  uint elapsed = ticks - p->start_ticks;//total elapsed ticks
+  uint secs = elapsed/1000;//number of seconds
+  uint tens = (elapsed %= 1000) /100;//tenths of a second
+  uint hunds = (elapsed %= 100) /10;//hundredths of a second
+  uint thous = (elapsed %= 10);//thousandths of a second
+
+  //cpu time
+  uint celapsed = p->cpu_ticks_total;
+  uint csec = celapsed/1000;
+  uint ctens = (celapsed %= 1000) /100;
+  uint chunds = (celapsed %= 100) /10;
+  uint cthous = (celapsed %= 10);
+
+  int ppid = 0;
+  if(!(p->parent))
+    ppid = p->pid;
+  else
+    ppid = p->parent->pid;
+  
+  cprintf("%d\t%s\t     %d\t        %d\t%d\t%d.%d%d%d\t%d.%d%d%d\t%s\t%d\t",
+      p->pid, p->name, p->uid, p->gid, ppid, secs, tens, hunds, thous, csec, ctens, chunds, cthous, state_string, p->sz );
   return;
 }
 #elif defined(CS333_P1)
@@ -753,3 +800,40 @@ assertState(struct proc *p, enum procstate state, const char * func, int line)
 }
 #endif
 
+#ifdef CS333_P2
+int
+getprocs(uint max, struct uproc* table)
+{
+  int count = 0;
+  struct proc* p; 
+
+  acquire(&ptable.lock);
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+  {
+    if(count < max)
+    {
+      if(strncmp(states[p->state],"runble", 6) == 0 || strncmp(states[p->state], "sleep", 5) == 0 || 
+         strncmp(states[p->state], "run", 3) == 0 || strncmp(states[p->state], "zombie", 6) == 0)
+      {
+        table[count].pid = p->pid;
+        table[count].uid = p->uid;
+        table[count].gid = p->gid;
+      
+        if(!(p->parent))
+          table[count].ppid = p->pid;
+        else
+          table[count].ppid = p->parent->pid;
+
+        table[count].elapsed_ticks = ticks - p->start_ticks;
+        table[count].CPU_total_ticks = p->cpu_ticks_total;
+        safestrcpy(table[count].state, states[p->state], STRMAX);
+        table[count].size = p->sz;
+        safestrcpy(table[count].name, p->name, STRMAX);
+        count++;
+      }
+    }
+  }
+  release(&ptable.lock);
+  return count;
+}
+#endif  //CS333_P2

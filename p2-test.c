@@ -226,7 +226,6 @@ testcputime(char * name){
 }
 #endif
 #endif
-
 #ifdef GETPROCS_TEST
 // Fork to 64 process and then make sure we get all when passing table array
 // of sizes 1, 16, 64, 72. NOTE: caller does all forks.
