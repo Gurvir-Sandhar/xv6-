@@ -4,7 +4,7 @@
 #include "user.h"
 #include "uproc.h"
 
-void
+static void
 print_time(uint milliseconds)
 { 
   uint elapsed = milliseconds;
@@ -13,12 +13,12 @@ print_time(uint milliseconds)
   uint hunds = (elapsed %= 100) /10; //hundredths of a second
   uint thous = (elapsed %= 10); //thousandths of a second
 
-  printf(1,"\t%d.%d%d%d ", sec, tens, hunds, thous);
+  printf(1,"\t%d.%d%d%d", sec, tens, hunds, thous);
   return;
 }
 
 int 
-main(int argc, char*argv[])
+main(int argc, char* argv[])
 {
   int max = 72;
   struct uproc* table = malloc(sizeof(struct uproc[max]));
@@ -27,23 +27,23 @@ main(int argc, char*argv[])
 
   if(num_procs == -1)//error
   {   
-    printf(1,"getprocs error, returned -1\n");
+    printf(1,"getprocs error in ps.c\n");
     free(table);
     exit();
   }
   else if(num_procs == 0)//no processes
   {
-    printf(1,"No processes returned from getproc");
+    printf(1,"no processes returned from getproc");
     free(table);
     exit();
   }
   else
   {
-    printf(1,"%s\t%s\t%s\t%s\t%s\t%s\t %s\t%s\t%s\t\n",
+    printf(1,"%s\t%s          %s\t%s\t%s\t%s\t  %s\t  %s\t%s\t\n",
           "PID", "Name", "UID", "GID", "PPID", "Elapsed", "CPU","State", "Size");
     for(int i = 0; i < num_procs; i++)
     {
-      printf(1,"%d\t%s\t%d\t%d\t%d", table[i].pid, table[i].name, table[i].uid, table[i].gid
+      printf(1,"%d\t%s\t\t%d\t%d\t%d", table[i].pid, table[i].name, table[i].uid, table[i].gid
           ,table[i].ppid);
       print_time(table[i].elapsed_ticks);//elapsed time
       print_time(table[i].CPU_total_ticks);//cpu time
