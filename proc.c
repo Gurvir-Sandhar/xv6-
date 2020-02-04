@@ -115,7 +115,17 @@ allocproc(void)
   struct proc *p;
   char *sp;
 
-  acquire(&ptable.lock);
+  acquire(&ptable.lock);  //get lock
+
+#ifdef CS333_P3
+  if(!ptable.list[UNUSED].head)
+  {
+    release(&ptable.lock);
+    return 0;
+  }
+  else
+    p = ptable.list[UNUSED].head;
+#else
   int found = 0;
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if(p->state == UNUSED) {
@@ -126,6 +136,7 @@ allocproc(void)
     release(&ptable.lock);
     return 0;
   }
+#endif
 #ifdef CS333_P3
   if(stateListRemove(&ptable.list[UNUSED], p) == -1)
   {
@@ -579,9 +590,13 @@ scheduler(void)
 #endif // PDX_XV6
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
+
+    p = ptable.list[RUNNABLE].head;
+    if(p){
+    /*
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
-        continue;
+        continue; */
 
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
