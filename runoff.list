@@ -99,3 +99,5 @@ p2testsuite.c
 p2-test.c
 p3-test.c
 p4-test.c
+uproc.h
+myP2test.c

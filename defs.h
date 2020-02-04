@@ -135,6 +135,12 @@ uint            getppid(void);
 int             setuid(uint);
 int             setgid(uint);
 #endif  //CS333_P2
+#ifdef CS333_P3
+void            printRunnableList(void);
+void            printNumUnused(void);
+void            printSleepingList(void);
+void            printZombieList(void);
+#endif  //CS333_P3
 
 // swtch.S
 void            swtch(struct context**, struct context*);

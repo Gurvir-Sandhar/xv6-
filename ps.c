@@ -20,12 +20,12 @@ print_time(uint milliseconds)
 int 
 main(int argc, char* argv[])
 {
-  int max = 72;
+  int max = 64;
   struct uproc* table = malloc(sizeof(struct uproc[max]));
   int num_procs = 0;
   num_procs = getprocs(max, table);
 
-  if(num_procs == -1)//error
+  if(num_procs < 0)//error
   {   
     printf(1,"getprocs error in ps.c\n");
     free(table);
@@ -39,7 +39,7 @@ main(int argc, char* argv[])
   }
   else
   {
-    printf(1,"%s\t%s          %s\t%s\t%s\t%s\t  %s\t  %s\t%s\t\n",
+    printf(1,"%s\t%s          %s\t%s\t%s\t%s\t  %s\t%s\t%s\t\n",
           "PID", "Name", "UID", "GID", "PPID", "Elapsed", "CPU","State", "Size");
     for(int i = 0; i < num_procs; i++)
     {

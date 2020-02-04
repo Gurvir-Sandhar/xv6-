@@ -202,6 +202,11 @@ void
 consoleintr(int (*getc)(void))
 {
   int c, doprocdump = 0;
+
+#ifdef CS333_P3
+  int control = 0;
+#endif //CS333_P3
+
 #ifdef PDX_XV6
   int shutdown = FALSE;
 #endif // PDX_XV6
@@ -231,6 +236,25 @@ consoleintr(int (*getc)(void))
         consputc(BACKSPACE);
       }
       break;
+
+#ifdef CS333_P3
+    case C('R'):  //print PID of all processes in RUNNABLE list
+      control = 1;
+      break;
+
+    case C('F'):  //print number of processes in UNUSED list
+      control = 2;
+      break;
+
+    case C('S'):  //print PID of all processes in SLEEPING list
+      control = 3;
+      break;
+
+    case C('Z'):  //print PID and PPID of all processes in Zombie list
+      control = 4;
+      break;
+#endif  //CS333_P3
+
     default:
       if(c != 0 && input.e-input.r < INPUT_BUF){
         c = (c == '\r') ? '\n' : c;
@@ -242,6 +266,7 @@ consoleintr(int (*getc)(void))
         }
       }
       break;
+
     }
   }
   release(&cons.lock);
@@ -252,6 +277,17 @@ consoleintr(int (*getc)(void))
   if(doprocdump) {
     procdump();  // now call procdump() wo. cons.lock held
   }
+
+#ifdef CS333_P3
+  if(control == 1)
+    printRunnableList();
+  else if(control == 2)
+    printNumUnused();
+  else if (control == 3)
+    printSleepingList();
+  else if (control == 4)
+    printZombieList();
+#endif  //CS333_P3
 }
 
 int
