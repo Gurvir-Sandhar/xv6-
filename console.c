@@ -253,6 +253,10 @@ consoleintr(int (*getc)(void))
     case C('Z'):  //print PID and PPID of all processes in Zombie list
       control = 4;
       break;
+
+    case C('L'):  //print list stats
+      control = 5;
+      break;
 #endif  //CS333_P3
 
     default:
@@ -287,6 +291,8 @@ consoleintr(int (*getc)(void))
     printSleepingList();
   else if (control == 4)
     printZombieList();
+  else if (control == 5)
+    printListStats();
 #endif  //CS333_P3
 }
 

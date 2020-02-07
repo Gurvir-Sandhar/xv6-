@@ -140,6 +140,7 @@ void            printRunnableList(void);
 void            printNumUnused(void);
 void            printSleepingList(void);
 void            printZombieList(void);
+void            printListStats(void);
 #endif  //CS333_P3
 
 // swtch.S
