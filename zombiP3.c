@@ -36,9 +36,9 @@ main(int argc, char *argv[])
     }
   }
 
-  do {
+ /* do {
     x = x+1;
-  } while (1);
+  } while (1); */
 
   while (wait() > 0) {} ;  // never reached
   printf(1, "Parent exiting\n");

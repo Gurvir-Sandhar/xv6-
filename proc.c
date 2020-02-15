@@ -403,14 +403,6 @@ exit(void)
     }
   }
 
- /* for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    if(p->parent == curproc){
-      p->parent = initproc;
-      if(p->state == ZOMBIE)
-        wakeup1(initproc);
-    }
-  }*/
-  
   if(stateListRemove(&ptable.list[RUNNING], curproc) == -1)
   {
     panic("stateListRemove() in exit() error");
@@ -946,9 +938,6 @@ kill(int pid)
   struct proc *p;
 
   acquire(&ptable.lock);
-  /*for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    if(p->pid == pid){
-      p->killed = 1;*/
 
   for(int i = EMBRYO; i <= ZOMBIE; ++i)
   {
