@@ -101,3 +101,5 @@ p3-test.c
 p4-test.c
 uproc.h
 myP2test.c
+zombiP3.c
+evans.c

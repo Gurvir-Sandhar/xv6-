@@ -40,6 +40,10 @@ static struct {
 #ifdef CS333_P3
   struct ptrs list[statecount];
 #endif  //CS333_P3
+#ifdef CS333_P4
+  struct ptrs ready[MAXPRIO + 1];
+  uint PromoteAtTime;
+#endif  //CS333_P4
 } ptable;
 
 // list management function prototypes
@@ -148,6 +152,11 @@ allocproc(void)
   p->state = EMBRYO;
   p->pid = nextpid++;
 
+#ifdef CS333_P4
+  p->priority = MAXPRIO;
+  p->budget = DEFAULT_BUDGET;
+#endif  //CS333_P4
+
 #ifdef CS333_P3
   stateListAdd(&ptable.list[EMBRYO], p); 
 #endif  //CS333_P3
@@ -209,6 +218,11 @@ userinit(void)
   initFreeList();
   release(&ptable.lock);
 #endif  //CS333_P3
+#ifdef CS333_P4
+  acquire(&ptable.lock);
+  ptable.PromoteAtTime = ticks + TICKS_TO_PROMOTE;
+  release(&ptable.lock);
+#endif  //CS333_P4
 
   struct proc *p;
   extern char _binary_initcode_start[], _binary_initcode_size[];
@@ -256,6 +270,12 @@ userinit(void)
   stateListAdd(&ptable.list[RUNNABLE], p);
 #endif  //CS333_P3
   release(&ptable.lock);  //release lock
+
+#ifdef CS333_P4 //add to ready list
+  acquire(&ptable.lock);
+  stateListAdd(&ptable.ready[p->priority], p);
+  release(&ptable.lock);
+#endif  //CS333_P4
 }
 
 // Grow current process's memory by n bytes.
@@ -314,6 +334,7 @@ fork(void)
 #ifdef CS333_P3
     stateListAdd(&ptable.list[UNUSED], np);
 #endif  //CS333_P3
+
     release(&ptable.lock);  //release lock
     return -1;
   }
@@ -352,6 +373,11 @@ fork(void)
 #ifdef CS333_P3
   stateListAdd(&ptable.list[RUNNABLE], np);
 #endif  //CS333_P3
+
+#ifdef CS333_P4 //add to ready list
+    stateListAdd(&ptable.ready[np->priority], np); 
+#endif  //CS333_P4
+
   release(&ptable.lock);  //release lock
   return pid;
 }
@@ -761,6 +787,10 @@ yield(void)
 
   stateListAdd(&ptable.list[RUNNABLE], curproc);
 
+#ifdef CS333_P4 //add to ready list
+  stateListAdd(&ptable.ready[curproc->priority], curproc);
+#endif  //CS333_P4
+
   sched();
   release(&ptable.lock);
 }
@@ -902,6 +932,10 @@ wakeup1(void *chan)
       p->state = RUNNABLE;
 
       stateListAdd(&ptable.list[RUNNABLE], p);
+
+#ifdef CS333_P4
+      stateListAdd(&ptable.ready[p->priority], p);
+#endif  //CS333_P4
     }
     p = p->next;
   } 
@@ -960,6 +994,9 @@ kill(int pid)
 
           stateListAdd(&ptable.list[RUNNABLE], p);
         }
+#ifdef CS333_P4 //add to ready list
+        stateListAdd(&ptable.ready[p->priority], p);
+#endif  //CS333_P4
         release(&ptable.lock);
         return 0;
       }
@@ -1005,7 +1042,29 @@ kill(int pid)
 void
 procdumpP4(struct proc *p, char *state_string)
 {
-  cprintf("TODO for Project 4, deleete this line and implement procdrumpP4() in proc.c to print a row\n");
+  //elapsed time
+  uint elapsed = ticks - p->start_ticks;//total elapsed ticks
+  uint secs = elapsed/1000;//number of seconds
+  uint tens = (elapsed %= 1000) /100;//tenths of a second
+  uint hunds = (elapsed %= 100) /10;//hundredths of a second
+  uint thous = (elapsed %= 10);//thousandths of a second
+
+  //cpu time
+  uint celapsed = p->cpu_ticks_total;
+  uint csec = celapsed/1000;
+  uint ctens = (celapsed %= 1000) /100;
+  uint chunds = (celapsed %= 100) /10;
+  uint cthous = (celapsed %= 10);
+
+  int ppid = 0;
+  if(!(p->parent))
+    ppid = p->pid;
+  else
+    ppid = p->parent->pid;
+
+  cprintf("%d\t%s\t     %d\t        %d\t%d\t%d\t%d.%d%d%d\t%d.%d%d%d\t%s\t%d\t",
+      p->pid, p->name, p->uid, p->gid, ppid, p->priority, secs, tens, hunds, 
+                    thous, csec, ctens, chunds, cthous, state_string, p->sz );
   return;
 }
 #elif defined(CS333_P3)
@@ -1275,7 +1334,7 @@ getprocs(uint max, struct uproc* table)
           table[count].ppid = p->pid;
         else
           table[count].ppid = p->parent->pid;
-
+        table[count].priority = p->priority;
         table[count].elapsed_ticks = ticks - p->start_ticks;
         table[count].CPU_total_ticks = p->cpu_ticks_total;
         safestrcpy(table[count].state, states[p->state], STRMAX);
@@ -1407,3 +1466,123 @@ printListStats()
   return;
 }
 #endif  //CS333_P3
+
+#ifdef CS333_P4
+int
+setprio(int pid, int priority)
+{
+  struct proc *p;
+  int found = 0;
+
+  acquire(&ptable.lock);    //get lock
+  for(int i = 0; i <= MAXPRIO; ++i)  //search all ready lists
+  {
+    p = ptable.ready[i].head;
+    while(p)
+    {
+      if(p->pid == pid)
+      {
+        found = 1;
+        if(priority != p->priority) //if new prio is not equal to current
+        {
+          if(stateListRemove(&ptable.ready[p->priority], p) == -1)
+          {
+            panic("setprio stateListRemove error line 1461");
+          }
+          assertState(p, p->priority, __FUNCTION__, __LINE__);
+
+          stateListAdd(&ptable.ready[priority], p);
+        }
+        p->priority = priority;
+        p->budget = DEFAULT_BUDGET; 
+        break;  //end loop
+      }
+      else
+        p = p->next;
+    }
+  }
+  if(!found)  //search sleep list
+  {
+    p = ptable.list[SLEEPING].head;
+    while(p)
+    {
+      if(p->pid == pid)
+      {
+        found = 1;
+        p->priority = priority;
+        p->budget = DEFAULT_BUDGET;
+        break;
+      }
+      else
+        p = p->next;
+    }
+  }
+  if(!found)  //search running list
+  {
+    p = ptable.list[RUNNING].head;
+    while(p)
+    {
+      if(p->pid == pid)
+      {
+        found = 1;
+        p->priority = priority;
+        p->budget = DEFAULT_BUDGET;
+        break;
+      }
+      else
+        p = p->next;
+    }
+  }
+  release(&ptable.lock);  //release lock
+  if(!found)
+    return -1; //pid not found
+  else
+    return 1;  
+}
+
+int
+getprio(int pid)
+{
+ struct proc *p;
+
+ acquire(&ptable.lock); //get lock
+ for(int i = 0; i <= MAXPRIO; ++i)  //search ready list
+ {
+   p = ptable.ready[i].head;
+   while(p)
+   {
+     if(p->pid == pid)
+     {
+       release(&ptable.lock); //release lock
+       return p->priority;
+     }
+     else
+       p = p->next;
+   }
+ }
+ p = ptable.list[SLEEPING].head;  //search sleep list
+ while(p)
+ {
+   if(p->pid == pid)
+   {
+     release(&ptable.lock);   //release lock
+     return p->priority;
+   }
+   else
+     p = p->next;
+ }
+ p = ptable.list[RUNNING].head;
+ while(p)
+ {
+   if(p->pid == pid)
+   {
+     release(&ptable.lock);   //release lock
+     return p->priority;
+   }
+   else
+     p = p->next;
+ }
+ release(&ptable.lock);   //release lock
+ return -1;  //pid not found
+}
+#endif  //CS333_P4 

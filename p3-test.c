@@ -45,7 +45,7 @@ main(int argc, char *argv[])
   } while(childCount);
 
   printf(1, "All child processes created\n");
-  while(1) i++;  // loop forever and don't call wait. Good for zombie check
+  //while(1) i++;  // loop forever and don't call wait. Good for zombie check
   exit();  // not reachable
 }
 #endif // CS333_P3

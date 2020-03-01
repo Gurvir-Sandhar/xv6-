@@ -26,5 +26,8 @@
 
 #define UID 0
 #define GID 0
+#define MAXPRIO 6
+#define DEFAULT_BUDGET 3000
+#define TICKS_TO_PROMOTE 500
 
 #endif  // PDX_INCLUDE

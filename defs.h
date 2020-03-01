@@ -12,6 +12,9 @@ struct superblock;
 #ifdef CS333_P2
 struct uproc;
 #endif //CS333_P2
+#ifdef CS333_P4
+//struct ptrs;
+#endif //CS333_P4
 
 // bio.c
 void            binit(void);
@@ -142,6 +145,10 @@ void            printSleepingList(void);
 void            printZombieList(void);
 void            printListStats(void);
 #endif  //CS333_P3
+#ifdef CS333_P4
+int             setprio(int,int);
+int             getprio(int);
+#endif  //CS333_P4
 
 // swtch.S
 void            swtch(struct context**, struct context*);

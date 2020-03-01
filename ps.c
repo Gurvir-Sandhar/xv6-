@@ -39,12 +39,12 @@ main(int argc, char* argv[])
   }
   else
   {
-    printf(1,"%s\t%s          %s\t%s\t%s\t%s\t  %s\t%s\t%s\t\n",
-          "PID", "Name", "UID", "GID", "PPID", "Elapsed", "CPU","State", "Size");
+    printf(1,"%s\t%s          %s\t%s\t%s\t%s\t  %s\t%s\t%s\t%s\t\n",
+          "PID", "Name", "UID", "GID", "PPID", "PRIO",  "Elapsed", "CPU","State", "Size");
     for(int i = 0; i < num_procs; i++)
     {
-      printf(1,"%d\t%s\t\t%d\t%d\t%d", table[i].pid, table[i].name, table[i].uid, table[i].gid
-          ,table[i].ppid);
+      printf(1,"%d\t%s\t\t%d\t%d\t%d\t%d", table[i].pid, table[i].name, table[i].uid, table[i].gid
+          ,table[i].ppid, table[i].priority);
       print_time(table[i].elapsed_ticks);//elapsed time
       print_time(table[i].CPU_total_ticks);//cpu time
       printf(1,"\t%s\t%d\n", table[i].state, table[i].size);
