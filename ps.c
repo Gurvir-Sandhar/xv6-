@@ -43,8 +43,10 @@ main(int argc, char* argv[])
           "PID", "Name", "UID", "GID", "PPID", "PRIO",  "Elapsed", "CPU","State", "Size");
     for(int i = 0; i < num_procs; i++)
     {
-      printf(1,"%d\t%s\t\t%d\t%d\t%d\t%d", table[i].pid, table[i].name, table[i].uid, table[i].gid
-          ,table[i].ppid, table[i].priority);
+      printf(1,"%d\t%s\t\t%d\t%d\t%d\t", table[i].pid, table[i].name, table[i].uid, table[i].gid,table[i].ppid);
+#ifdef CS333_P4
+      printf(1,"%d",table[i].priority);
+#endif  //CS333_P4
       print_time(table[i].elapsed_ticks);//elapsed time
       print_time(table[i].CPU_total_ticks);//cpu time
       printf(1,"\t%s\t%d\n", table[i].state, table[i].size);
